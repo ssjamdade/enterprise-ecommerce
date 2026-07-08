@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: enterprise-ecommerce
+  profiles:
+    active: dev
+
