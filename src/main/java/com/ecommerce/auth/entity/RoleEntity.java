@@ -20,12 +20,19 @@ public class RoleEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    private Role name;
 
     @Column(length = 255)
     private String description;
 
     @ManyToMany(mappedBy = "roles")
     private Set<UserEntity> users = new HashSet<>();
+
+    public enum Role {
+        ROLE_ADMIN,
+        ROLE_CUSTOMER,
+        ROLE_SELLER
+    }
 }
