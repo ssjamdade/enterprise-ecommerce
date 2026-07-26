@@ -14,6 +14,8 @@ import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.security.jwt.JwtService;
 import com.ecommerce.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     @Transactional
@@ -40,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Get default role
-        RoleEntity userRole = roleRepository.findByRoleName(RoleEntity.Role.ROLE_CUSTOMER)
+        RoleEntity userRole = roleRepository.findByName(RoleEntity.Role.ROLE_CUSTOMER)
                 .orElseThrow(() -> new ResourceNotFoundException("Default role not found."));
 
         // Create user
@@ -48,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
+                .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Set.of(userRole))
                 .build();
@@ -69,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.save(refreshTokenEntity);
 
         // Return response
-        return AuthenticationResponse.builder()
+        return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -77,7 +81,32 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        return null;
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+        UserEntity user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        RefreshTokenEntity refreshTokenEntity = RefreshTokenEntity.builder()
+                .token(refreshToken)
+                .user(user)
+                .expiresAt(jwtService.extractExpiration(refreshToken))
+                .revoked(false)
+                .build();
+
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Override
