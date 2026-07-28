@@ -1,9 +1,6 @@
 package com.ecommerce.service;
 
-import com.ecommerce.auth.dto.AuthResponse;
-import com.ecommerce.auth.dto.LoginRequest;
-import com.ecommerce.auth.dto.RefreshTokenRequest;
-import com.ecommerce.auth.dto.RegisterRequest;
+import com.ecommerce.auth.dto.*;
 
 public interface AuthService {
     AuthResponse register(RegisterRequest request);
@@ -13,4 +10,6 @@ public interface AuthService {
     AuthResponse refreshToken(RefreshTokenRequest request);
 
     void logout(String refreshToken);
+
+    UserResponse getCurrentUser();
 }

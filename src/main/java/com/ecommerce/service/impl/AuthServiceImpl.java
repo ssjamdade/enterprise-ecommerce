@@ -1,25 +1,25 @@
 package com.ecommerce.service.impl;
 
-import com.ecommerce.auth.dto.AuthResponse;
-import com.ecommerce.auth.dto.LoginRequest;
-import com.ecommerce.auth.dto.RefreshTokenRequest;
-import com.ecommerce.auth.dto.RegisterRequest;
+import com.ecommerce.auth.dto.*;
 import com.ecommerce.auth.entity.RefreshTokenEntity;
 import com.ecommerce.auth.entity.RoleEntity;
 import com.ecommerce.auth.entity.UserEntity;
 import com.ecommerce.auth.repository.RefreshTokenRepo;
 import com.ecommerce.auth.repository.RoleRepo;
 import com.ecommerce.auth.repository.UserRepo;
+import com.ecommerce.common.exception.BadRequestException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.security.jwt.JwtService;
 import com.ecommerce.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Service
@@ -111,12 +111,54 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse refreshToken(RefreshTokenRequest request) {
-        return null;
+
+        RefreshTokenEntity refreshToken = refreshTokenRepository
+                .findByToken(request.getRefreshToken())
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid refresh token"));
+
+        if (refreshToken.getRevoked()) {
+            throw new BadRequestException("Refresh token has been revoked.");
+        }
+
+        if (refreshToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Refresh token has expired.");
+        }
+
+        UserEntity user = refreshToken.getUser();
+
+        String accessToken = jwtService.generateAccessToken(user);
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken.getToken())
+                .build();
     }
 
     @Override
     @Transactional
     public void logout(String refreshToken) {
+        RefreshTokenEntity token = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found."));
 
+        token.setRevoked(true);
+
+        refreshTokenRepository.save(token);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUser() {
+
+        UserEntity user = (UserEntity) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        return UserResponse.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .build();
     }
 }
