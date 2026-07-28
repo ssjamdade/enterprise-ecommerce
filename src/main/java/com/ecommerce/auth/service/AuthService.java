@@ -1,4 +1,4 @@
-package com.ecommerce.service;
+package com.ecommerce.auth.service;
 
 import com.ecommerce.auth.dto.*;
 

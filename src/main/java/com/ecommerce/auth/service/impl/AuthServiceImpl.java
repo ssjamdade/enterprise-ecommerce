@@ -1,4 +1,4 @@
-package com.ecommerce.service.impl;
+package com.ecommerce.auth.service.impl;
 
 import com.ecommerce.auth.dto.*;
 import com.ecommerce.auth.entity.RefreshTokenEntity;
@@ -10,7 +10,7 @@ import com.ecommerce.auth.repository.UserRepo;
 import com.ecommerce.common.exception.BadRequestException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.security.jwt.JwtService;
-import com.ecommerce.service.AuthService;
+import com.ecommerce.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
