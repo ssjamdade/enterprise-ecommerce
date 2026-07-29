@@ -3,11 +3,23 @@ package com.ecommerce.category.service.impl;
 import com.ecommerce.category.dto.CategoryResponse;
 import com.ecommerce.category.dto.CreateCategoryRequest;
 import com.ecommerce.category.entity.CategoryEntity;
+import com.ecommerce.category.repository.CategoryRepo;
 import com.ecommerce.category.service.CategoryService;
+import com.ecommerce.common.exception.ResourceAlreadyExistsException;
+import com.ecommerce.common.exception.ResourceNotFoundException;
+import com.ecommerce.mapper.CategoryMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
+
+    private final CategoryMapper categoryMapper;
+    private final CategoryRepo categoryRepository;
 
     @Override
     public CategoryResponse create(CreateCategoryRequest request) {
@@ -16,18 +28,15 @@ public class CategoryServiceImpl implements CategoryService {
             throw new ResourceAlreadyExistsException("Category already exists.");
         }
 
-        CategoryEntity category = CategoryEntity.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .build();
+        CategoryEntity category = categoryMapper.toEntity(request);
 
         categoryRepository.save(category);
 
-        return mapToResponse(category);
+        return categoryMapper.toResponse(category);
     }
 
     @Override
-    public CategoryResponse update(Long id, UpdateCategoryRequest request) {
+    public CategoryResponse update(Long id, CreateCategoryRequest request) {
 
         CategoryEntity category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
@@ -37,13 +46,11 @@ public class CategoryServiceImpl implements CategoryService {
             throw new ResourceAlreadyExistsException("Category already exists.");
         }
 
-        category.setName(request.getName());
-        category.setDescription(request.getDescription());
-        category.setActive(request.getActive());
+        categoryMapper.updateEntity(request, category);
 
         categoryRepository.save(category);
 
-        return mapToResponse(category);
+        return categoryMapper.toResponse(category);
     }
 
     @Override
@@ -62,7 +69,7 @@ public class CategoryServiceImpl implements CategoryService {
         CategoryEntity category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
 
-        return mapToResponse(category);
+        return categoryMapper.toResponse(category);
     }
 
     @Override
@@ -71,7 +78,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         return categoryRepository.findAll()
                 .stream()
-                .map(this::mapToResponse)
+                .map(categoryMapper::toResponse)
                 .toList();
     }
 }

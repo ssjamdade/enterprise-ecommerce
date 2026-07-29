@@ -1,5 +1,16 @@
 package com.ecommerce.category.controller;
 
+import com.ecommerce.category.dto.CategoryResponse;
+import com.ecommerce.category.dto.CreateCategoryRequest;
+import com.ecommerce.category.service.CategoryService;
+import com.ecommerce.common.response.ApiResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
@@ -22,7 +33,7 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoryResponse>> update(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateCategoryRequest request) {
+            @Valid @RequestBody CreateCategoryRequest request) {
 
         return ResponseEntity.ok(
                 ApiResponse.<CategoryResponse>builder()
