@@ -29,5 +29,6 @@ public interface ProductMapper {
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "inventory", ignore = true)
     void updateEntity(CreateProductRequest request, @MappingTarget ProductEntity entity);
 }

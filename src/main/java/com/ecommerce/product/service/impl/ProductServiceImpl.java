@@ -8,6 +8,7 @@ import com.ecommerce.mapper.ProductMapper;
 import com.ecommerce.product.dto.CreateProductRequest;
 import com.ecommerce.product.dto.ProductFilterRequest;
 import com.ecommerce.product.dto.ProductResponse;
+import com.ecommerce.product.entity.InventoryEntity;
 import com.ecommerce.product.entity.ProductEntity;
 import com.ecommerce.product.repository.ProductRepo;
 import com.ecommerce.product.service.ProductService;
@@ -56,6 +57,15 @@ public class ProductServiceImpl implements ProductService {
         productMapper.updateEntity(request, product);
 
         product.setCategory(category);
+
+        productRepository.save(product);
+
+        InventoryEntity inventory = InventoryEntity.builder()
+                .product(product)
+                .quantity(request.getQuantity())
+                .build();
+
+        product.setInventory(inventory);
 
         productRepository.save(product);
 

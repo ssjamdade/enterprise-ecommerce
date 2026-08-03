@@ -27,7 +27,7 @@ public class CreateProductRequest {
 
     @NotNull
     @PositiveOrZero
-    private Integer stock;
+    private Integer quantity;
 
     @NotNull
     private Boolean active;

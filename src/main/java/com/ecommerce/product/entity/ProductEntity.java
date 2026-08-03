@@ -34,9 +34,11 @@ public class ProductEntity extends BaseEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Integer stock = 0;
+    @OneToOne(mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private InventoryEntity inventory;
 
     @Column(nullable = false)
     @Builder.Default
