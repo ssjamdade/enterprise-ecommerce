@@ -6,10 +6,12 @@ import com.ecommerce.common.exception.ResourceAlreadyExistsException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
 import com.ecommerce.mapper.ProductMapper;
 import com.ecommerce.product.dto.CreateProductRequest;
+import com.ecommerce.product.dto.ProductFilterRequest;
 import com.ecommerce.product.dto.ProductResponse;
 import com.ecommerce.product.entity.ProductEntity;
 import com.ecommerce.product.repository.ProductRepo;
 import com.ecommerce.product.service.ProductService;
+import com.ecommerce.product.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,6 +86,16 @@ public class ProductServiceImpl implements ProductService {
     public Page<ProductResponse> getAll(Pageable pageable) {
 
         return productRepository.findAll(pageable)
+                .map(productMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> search(ProductFilterRequest request,
+                                        Pageable pageable) {
+
+        return productRepository
+                .findAll(ProductSpecification.filter(request), pageable)
                 .map(productMapper::toResponse);
     }
 }

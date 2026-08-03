@@ -2,6 +2,7 @@ package com.ecommerce.product.controller;
 
 import com.ecommerce.common.response.ApiResponse;
 import com.ecommerce.product.dto.CreateProductRequest;
+import com.ecommerce.product.dto.ProductFilterRequest;
 import com.ecommerce.product.dto.ProductResponse;
 import com.ecommerce.product.service.ProductService;
 import jakarta.validation.Valid;
@@ -72,5 +73,19 @@ public class ProductController {
                 .message("Products fetched successfully.")
                 .data(productService.getAll(pageable))
                 .build());
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> search(
+            @RequestBody ProductFilterRequest request,
+            Pageable pageable) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<Page<ProductResponse>>builder()
+                        .success(true)
+                        .message("Products fetched successfully.")
+                        .data(productService.search(request, pageable))
+                        .build()
+        );
     }
 }
