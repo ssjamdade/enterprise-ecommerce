@@ -5,6 +5,7 @@ import com.ecommerce.product.dto.ProductFilterRequest;
 import com.ecommerce.product.dto.ProductResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface ProductService {
 
@@ -20,4 +21,11 @@ public interface ProductService {
 
     Page<ProductResponse> search(ProductFilterRequest request,
                                  Pageable pageable);
+
+    ProductResponse uploadImages(Long productId, MultipartFile[] files);
+
+    void deleteImage(Long imageId);
+
+    void setPrimaryImage(Long imageId);
+
 }
