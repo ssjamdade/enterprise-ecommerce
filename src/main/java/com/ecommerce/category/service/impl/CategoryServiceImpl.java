@@ -24,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryResponse create(CreateCategoryRequest request) {
 
-        if (categoryRepository.existsByNameIgnoreCase(request.getName())) {
+        if (categoryRepository.existsByNameIgnoreCase(request.getName().trim())) {
             throw new ResourceAlreadyExistsException("Category already exists.");
         }
 
@@ -41,8 +41,8 @@ public class CategoryServiceImpl implements CategoryService {
         CategoryEntity category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
 
-        if (!category.getName().equalsIgnoreCase(request.getName())
-                && categoryRepository.existsByNameIgnoreCase(request.getName())) {
+        if (!category.getName().equalsIgnoreCase(request.getName().trim())
+                && categoryRepository.existsByNameIgnoreCase(request.getName().trim())) {
             throw new ResourceAlreadyExistsException("Category already exists.");
         }
 
