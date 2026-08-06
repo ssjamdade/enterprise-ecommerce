@@ -36,7 +36,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse create(CreateProductRequest request) {
 
-        if (productRepository.existsBySku(request.getSku())) {
+        if (productRepository.existsBySku(request.getSku().trim())) {
             throw new ResourceAlreadyExistsException("SKU already exists.");
         }
 

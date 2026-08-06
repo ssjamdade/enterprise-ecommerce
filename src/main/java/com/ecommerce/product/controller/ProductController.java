@@ -96,14 +96,14 @@ public class ProductController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<ApiResponse<ProductResponse>> uploadImages(
-            @PathVariable Long id,
+            @PathVariable Long productId,
             @RequestParam("files") MultipartFile[] files) {
 
         return ResponseEntity.ok(
                 ApiResponse.<ProductResponse>builder()
                         .success(true)
                         .message("Images uploaded successfully.")
-                        .data(productService.uploadImages(id, files))
+                        .data(productService.uploadImages(productId, files))
                         .build()
         );
     }

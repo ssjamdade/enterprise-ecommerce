@@ -34,12 +34,6 @@ public class ProductEntity extends BaseEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
-    @OneToOne(mappedBy = "product",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY)
-    private InventoryEntity inventory;
-
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
@@ -53,4 +47,10 @@ public class ProductEntity extends BaseEntity {
             orphanRemoval = true)
     @Builder.Default
     private List<ProductImageEntity> images = new ArrayList<>();
+
+    @OneToOne(mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private InventoryEntity inventory;
 }
