@@ -31,3 +31,17 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# Local Spring configs
+application-dev.yml
+application-prod.yml
