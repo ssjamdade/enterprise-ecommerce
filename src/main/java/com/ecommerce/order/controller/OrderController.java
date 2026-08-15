@@ -1,4 +1,4 @@
-package com.ecommerce.order;
+package com.ecommerce.order.controller;
 
 import com.ecommerce.common.response.ApiResponse;
 import com.ecommerce.order.dto.CreateOrderRequest;
