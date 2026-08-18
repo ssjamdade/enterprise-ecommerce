@@ -43,6 +43,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${razorpay.key-secret}")
     private String razorpayKeySecret;
 
+    @Value("${razorpay.webhook-secret}")
+    private String webhookSecret;
+
     @Override
     @Transactional
     public PaymentResponse createPayment(Long orderId) {
@@ -151,6 +154,132 @@ public class PaymentServiceImpl implements PaymentService {
 
         } catch (RazorpayException e) {
             throw new BadRequestException("Payment verification failed.");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void handleWebhook(
+            String payload,
+            String signature,
+            String eventId) {
+
+        try {
+
+            Utils.verifyWebhookSignature(
+                    payload,
+                    signature,
+                    webhookSecret
+            );
+
+        } catch (RazorpayException e) {
+            throw new BadRequestException("Invalid Razorpay webhook signature.");
+        }
+
+        JSONObject event = new JSONObject(payload);
+
+        String eventType = event.getString("event");
+
+        switch (eventType) {
+
+            case "payment.captured":
+            case "order.paid":
+                handlePaymentCaptured(event);
+                break;
+
+            case "payment.failed":
+                handlePaymentFailed(event);
+                break;
+
+            default:
+                // Ignore events that our application doesn't need.
+                break;
+        }
+    }
+
+    private void handlePaymentCaptured(JSONObject event) {
+
+        JSONObject paymentEntity =
+                event.getJSONObject("payload")
+                        .getJSONObject("payment")
+                        .getJSONObject("entity");
+
+        String razorpayOrderId =
+                paymentEntity.getString("order_id");
+
+        String razorpayPaymentId =
+                paymentEntity.getString("id");
+
+        PaymentEntity payment = paymentRepo
+                .findByRazorpayOrderId(razorpayOrderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Payment not found."));
+
+        // Idempotency
+        if (payment.getStatus() == PaymentEntity.PaymentStatus.PAID) {
+            return;
+        }
+
+        payment.setRazorpayPaymentId(razorpayPaymentId);
+        payment.setStatus(PaymentEntity.PaymentStatus.PAID);
+
+        OrderEntity order = payment.getOrder();
+
+        order.setPaymentStatus(OrderEntity.PaymentStatus.PAID);
+        order.setStatus(OrderEntity.OrderStatus.CONFIRMED);
+
+        finalizeInventory(order);
+
+        paymentRepo.save(payment);
+        orderRepo.save(order);
+    }
+
+    private void handlePaymentFailed(JSONObject event) {
+
+        JSONObject paymentEntity =
+                event.getJSONObject("payload")
+                        .getJSONObject("payment")
+                        .getJSONObject("entity");
+
+        String razorpayOrderId =
+                paymentEntity.getString("order_id");
+
+        PaymentEntity payment = paymentRepo
+                .findByRazorpayOrderId(razorpayOrderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Payment not found."));
+
+        if (payment.getStatus() == PaymentEntity.PaymentStatus.PAID) {
+            return;
+        }
+
+        payment.setStatus(PaymentEntity.PaymentStatus.FAILED);
+
+        OrderEntity order = payment.getOrder();
+
+        order.setPaymentStatus(OrderEntity.PaymentStatus.FAILED);
+        order.setStatus(OrderEntity.OrderStatus.CANCELLED);
+
+        releaseInventory(order);
+
+        paymentRepo.save(payment);
+        orderRepo.save(order);
+    }
+
+    private void releaseInventory(OrderEntity order) {
+
+        for (OrderItemEntity item : order.getItems()) {
+
+            InventoryEntity inventory = inventoryRepo
+                    .findByProductIdForUpdate(item.getProduct().getId())
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Inventory not found."));
+
+            inventory.setReservedQuantity(
+                    inventory.getReservedQuantity() - item.getQuantity()
+            );
+
+            inventoryRepo.save(inventory);
         }
     }
 
