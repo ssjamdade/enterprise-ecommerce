@@ -1,5 +1,7 @@
 package com.ecommerce.order.service.impl;
 
+import com.ecommerce.address.entity.AddressEntity;
+import com.ecommerce.address.repository.AddressRepo;
 import com.ecommerce.auth.entity.UserEntity;
 import com.ecommerce.cart.entity.CartEntity;
 import com.ecommerce.cart.entity.CartItemEntity;
@@ -33,12 +35,18 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepo cartRepo;
     private final InventoryRepo inventoryRepo;
     private final OrderRepo orderRepo;
+    private final AddressRepo addressRepo;
 
     @Override
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
 
         UserEntity user = securityUtils.getCurrentUser();
+
+        AddressEntity address = addressRepo
+                .findByIdAndUserId(request.getAddressId(), user.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Address not found."));
 
         CartEntity cart = cartRepo.findByUserId(user.getId())
                 .orElseThrow(() ->
@@ -50,6 +58,13 @@ public class OrderServiceImpl implements OrderService {
 
         OrderEntity order = OrderEntity.builder()
                 .user(user)
+                .shippingFullName(address.getFullName())
+                .shippingPhone(address.getPhone())
+                .shippingAddressLine(address.getAddressLine())
+                .shippingCity(address.getCity())
+                .shippingState(address.getState())
+                .shippingPincode(address.getPincode())
+                .shippingCountry(address.getCountry())
                 .status(OrderEntity.OrderStatus.PENDING)
                 .paymentStatus(OrderEntity.PaymentStatus.PENDING)
                 .totalAmount(BigDecimal.ZERO)

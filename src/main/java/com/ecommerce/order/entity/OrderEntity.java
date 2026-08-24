@@ -39,6 +39,27 @@ public class OrderEntity extends BaseEntity {
     @Builder.Default
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
+    @Column(name = "shipping_full_name", nullable = false, length = 150)
+    private String shippingFullName;
+
+    @Column(name = "shipping_phone", nullable = false, length = 20)
+    private String shippingPhone;
+
+    @Column(name = "shipping_address_line", nullable = false, length = 500)
+    private String shippingAddressLine;
+
+    @Column(name = "shipping_city", nullable = false, length = 100)
+    private String shippingCity;
+
+    @Column(name = "shipping_state", nullable = false, length = 100)
+    private String shippingState;
+
+    @Column(name = "shipping_pincode", nullable = false, length = 20)
+    private String shippingPincode;
+
+    @Column(name = "shipping_country", nullable = false, length = 100)
+    private String shippingCountry;
+
     @OneToMany(
             mappedBy = "order",
             cascade = CascadeType.ALL,

@@ -1,0 +1,8 @@
+ALTER TABLE orders
+ADD COLUMN shipping_full_name VARCHAR(150) NOT NULL,
+ADD COLUMN shipping_phone VARCHAR(20) NOT NULL,
+ADD COLUMN shipping_address_line VARCHAR(500) NOT NULL,
+ADD COLUMN shipping_city VARCHAR(100) NOT NULL,
+ADD COLUMN shipping_state VARCHAR(100) NOT NULL,
+ADD COLUMN shipping_pincode VARCHAR(20) NOT NULL,
+ADD COLUMN shipping_country VARCHAR(100) NOT NULL;

@@ -17,4 +17,12 @@ public class OrderResponse {
     private OrderEntity.OrderStatus status;
     private OrderEntity.PaymentStatus paymentStatus;
     private List<OrderItemResponse> items;
+
+    private String shippingFullName;
+    private String shippingPhone;
+    private String shippingAddressLine;
+    private String shippingCity;
+    private String shippingState;
+    private String shippingPincode;
+    private String shippingCountry;
 }
