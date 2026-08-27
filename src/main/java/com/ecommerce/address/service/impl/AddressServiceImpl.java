@@ -34,14 +34,14 @@ public class AddressServiceImpl implements AddressService {
         address.setUser(user);
 
         boolean makeDefault =
-                Boolean.TRUE.equals(request.getDefaultAddress())
+                Boolean.TRUE.equals(request.getIsDefault())
                         || !addressRepository.existsByUserId(user.getId());
 
         if (makeDefault) {
             clearDefaultAddress(user.getId());
         }
 
-        address.setDefaultAddress(makeDefault);
+        address.setIsDefault(makeDefault);
 
         return addressMapper.toResponse(
                 addressRepository.save(address)
@@ -90,7 +90,7 @@ public class AddressServiceImpl implements AddressService {
 
         clearDefaultAddress(user.getId());
 
-        address.setDefaultAddress(true);
+        address.setIsDefault(true);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class AddressServiceImpl implements AddressService {
         UserEntity user = securityUtils.getCurrentUser();
 
         return addressRepository
-                .findByUserIdOrderByDefaultAddressDescCreatedAtDesc(user.getId())
+                .findByUserIdOrderByIsDefaultDescCreatedAtDesc(user.getId())
                 .stream()
                 .map(addressMapper::toResponse)
                 .toList();
@@ -109,7 +109,7 @@ public class AddressServiceImpl implements AddressService {
     private void clearDefaultAddress(Long userId) {
 
         addressRepository
-                .findByUserIdOrderByDefaultAddressDescCreatedAtDesc(userId)
-                .forEach(address -> address.setDefaultAddress(false));
+                .findByUserIdOrderByIsDefaultDescCreatedAtDesc(userId)
+                .forEach(address -> address.setIsDefault(false));
     }
 }

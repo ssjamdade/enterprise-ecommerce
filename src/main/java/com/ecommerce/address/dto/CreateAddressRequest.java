@@ -33,5 +33,5 @@ public class CreateAddressRequest {
     @NotNull
     private AddressEntity.AddressType addressType;
 
-    private Boolean defaultAddress;
+    private Boolean isDefault;
 }

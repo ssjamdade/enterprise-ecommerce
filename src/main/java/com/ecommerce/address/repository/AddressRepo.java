@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface AddressRepo extends JpaRepository<AddressEntity, Long> {
 
-    List<AddressEntity> findByUserIdOrderByDefaultAddressDescCreatedAtDesc(
+    List<AddressEntity> findByUserIdOrderByIsDefaultDescCreatedAtDesc(
             Long userId
     );
 

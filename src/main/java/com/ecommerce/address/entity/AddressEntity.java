@@ -51,7 +51,7 @@ public class AddressEntity extends BaseEntity {
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean defaultAddress = false;
+    private Boolean isDefault = false;
 
     public enum AddressType {
         HOME,
