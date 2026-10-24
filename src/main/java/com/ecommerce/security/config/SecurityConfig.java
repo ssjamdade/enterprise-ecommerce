@@ -48,6 +48,9 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh"
                         ).permitAll()
+                        .requestMatchers("/api/v1/products/my-products").authenticated()
+                        .requestMatchers("/api/v1/seller/**").authenticated()
+                        .requestMatchers("/api/v1/admin/kyc/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/search").permitAll()

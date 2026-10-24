@@ -1,5 +1,6 @@
 package com.ecommerce.product.entity;
 
+import com.ecommerce.auth.entity.UserEntity;
 import com.ecommerce.category.entity.CategoryEntity;
 import com.ecommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -53,4 +54,8 @@ public class ProductEntity extends BaseEntity {
             orphanRemoval = true,
             fetch = FetchType.LAZY)
     private InventoryEntity inventory;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id")
+    private UserEntity seller;
 }

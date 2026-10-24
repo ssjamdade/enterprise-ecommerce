@@ -1,9 +1,11 @@
 package com.ecommerce.product.service.impl;
 
+import com.ecommerce.auth.entity.UserEntity;
 import com.ecommerce.category.entity.CategoryEntity;
 import com.ecommerce.category.repository.CategoryRepo;
 import com.ecommerce.common.exception.ResourceAlreadyExistsException;
 import com.ecommerce.common.exception.ResourceNotFoundException;
+import com.ecommerce.common.exception.UnauthorizedException;
 import com.ecommerce.mapper.ProductMapper;
 import com.ecommerce.product.dto.CreateProductRequest;
 import com.ecommerce.product.dto.ProductFilterRequest;
@@ -16,6 +18,8 @@ import com.ecommerce.product.repository.ProductRepo;
 import com.ecommerce.product.service.ImageService;
 import com.ecommerce.product.service.ProductService;
 import com.ecommerce.product.specification.ProductSpecification;
+import com.ecommerce.security.SecurityUtils;
+import com.ecommerce.seller.service.SellerKycService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,20 +36,29 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final ImageService imageService;
     private final ProductImageRepo productImageRepo;
+    private final SecurityUtils securityUtils;
+    private final SellerKycService sellerKycService;
 
     @Override
+    @Transactional
     public ProductResponse create(CreateProductRequest request) {
 
         if (productRepository.existsBySku(request.getSku().trim())) {
             throw new ResourceAlreadyExistsException("SKU already exists.");
         }
 
+        if (!sellerKycService.isCurrentUserApprovedSeller()) {
+            throw new UnauthorizedException("Only verified sellers with approved KYC can list products. Please submit and complete your KYC verification first.");
+        }
+
         CategoryEntity category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
 
-        ProductEntity product = productMapper.toEntity(request);
+        UserEntity currentUser = securityUtils.getCurrentUser();
 
+        ProductEntity product = productMapper.toEntity(request);
         product.setCategory(category);
+        product.setSeller(currentUser);
 
         productRepository.save(product);
 
@@ -53,6 +66,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductResponse update(Long id, CreateProductRequest request) {
         ProductEntity product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
@@ -60,11 +74,12 @@ public class ProductServiceImpl implements ProductService {
         CategoryEntity category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
 
+        if (!sellerKycService.isCurrentUserApprovedSeller()) {
+            throw new UnauthorizedException("Only verified sellers can update products.");
+        }
+
         productMapper.updateEntity(request, product);
-
         product.setCategory(category);
-
-        productRepository.save(product);
 
         InventoryEntity inventory = InventoryEntity.builder()
                 .product(product)
@@ -72,15 +87,14 @@ public class ProductServiceImpl implements ProductService {
                 .build();
 
         product.setInventory(inventory);
-
         productRepository.save(product);
 
         return productMapper.toResponse(product);
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
-
         ProductEntity product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
@@ -90,7 +104,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public ProductResponse getById(Long id) {
-
         ProductEntity product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
@@ -100,35 +113,38 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponse> getAll(Pageable pageable) {
-
         return productRepository.findAll(pageable)
                 .map(productMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductResponse> search(ProductFilterRequest request,
-                                        Pageable pageable) {
-
+    public Page<ProductResponse> search(ProductFilterRequest request, Pageable pageable) {
         return productRepository
                 .findAll(ProductSpecification.filter(request), pageable)
                 .map(productMapper::toResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getMyProducts(Pageable pageable) {
+        UserEntity currentUser = securityUtils.getCurrentUser();
+        return productRepository.findAllBySellerId(currentUser.getId(), pageable)
+                .map(productMapper::toResponse);
+    }
+
+    @Override
     @Transactional
     public ProductResponse uploadImages(Long productId, MultipartFile[] files) {
-
         ProductEntity product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
         for (MultipartFile file : files) {
-
             String imageUrl = imageService.upload(file);
 
             ProductImageEntity image = ProductImageEntity.builder()
                     .imageUrl(imageUrl)
-                    .primary(product.getImages().isEmpty()) // First image becomes primary
+                    .primary(product.getImages().isEmpty())
                     .product(product)
                     .build();
 
@@ -143,27 +159,21 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteImage(Long imageId) {
-
         ProductImageEntity image = productImageRepo.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Image not found."));
 
         imageService.delete(image.getImageUrl());
-
         productImageRepo.delete(image);
     }
 
     @Override
     @Transactional
     public void setPrimaryImage(Long imageId) {
-
         ProductImageEntity image = productImageRepo.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Image not found."));
 
         ProductEntity product = image.getProduct();
-
-        product.getImages()
-                .forEach(img -> img.setPrimary(false));
-
+        product.getImages().forEach(img -> img.setPrimary(false));
         image.setPrimary(true);
 
         productRepository.save(product);

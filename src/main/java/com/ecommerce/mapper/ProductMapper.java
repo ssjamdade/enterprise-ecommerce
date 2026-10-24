@@ -17,10 +17,13 @@ public interface ProductMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "images", ignore = true)
+    @Mapping(target = "seller", ignore = true)
     ProductEntity toEntity(CreateProductRequest request);
 
     @Mapping(source = "category.id", target = "categoryId")
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "seller.id", target = "sellerId")
+    @Mapping(expression = "java(entity.getSeller() != null ? (entity.getSeller().getFirstName() + (entity.getSeller().getLastName() != null ? \" \" + entity.getSeller().getLastName() : \"\")) : null)", target = "sellerName")
     @Mapping(target = "images", expression = "java(mapImages(entity.getImages()))")
     ProductResponse toResponse(ProductEntity entity);
 
@@ -39,6 +42,7 @@ public interface ProductMapper {
     @Mapping(target = "sku", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "images", ignore = true)
+    @Mapping(target = "seller", ignore = true)
     @Mapping(target = "inventory", ignore = true)
     void updateEntity(CreateProductRequest request, @MappingTarget ProductEntity entity);
 }

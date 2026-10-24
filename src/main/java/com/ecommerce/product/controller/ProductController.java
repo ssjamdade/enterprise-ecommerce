@@ -55,6 +55,17 @@ public class ProductController {
                 .build());
     }
 
+    @GetMapping("/my-products")
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getMyProducts(
+            Pageable pageable) {
+
+        return ResponseEntity.ok(ApiResponse.<Page<ProductResponse>>builder()
+                .success(true)
+                .message("Seller products fetched successfully.")
+                .data(productService.getMyProducts(pageable))
+                .build());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponse>> getById(
             @PathVariable Long id) {
@@ -96,7 +107,7 @@ public class ProductController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<ApiResponse<ProductResponse>> uploadImages(
-            @PathVariable Long productId,
+            @PathVariable("id") Long productId,
             @RequestParam("files") MultipartFile[] files) {
 
         return ResponseEntity.ok(

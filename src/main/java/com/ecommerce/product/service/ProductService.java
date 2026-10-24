@@ -28,4 +28,6 @@ public interface ProductService {
 
     void setPrimaryImage(Long imageId);
 
+    Page<ProductResponse> getMyProducts(Pageable pageable);
+
 }
