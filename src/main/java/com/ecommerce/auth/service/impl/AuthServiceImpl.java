@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -76,19 +78,25 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .user(mapToUserResponse(user))
                 .build();
     }
 
     @Override
     public AuthResponse login(LoginRequest request) {
+        String identifier = request.getEmail() != null ? request.getEmail().trim() : "";
+        if ("admin".equalsIgnoreCase(identifier)) {
+            identifier = "admin@ecommerce.com";
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        identifier,
                         request.getPassword()
                 )
         );
 
-        UserEntity user = userRepository.findByEmail(request.getEmail())
+        UserEntity user = userRepository.findByEmail(identifier)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         String accessToken = jwtService.generateAccessToken(user);
@@ -103,17 +111,10 @@ public class AuthServiceImpl implements AuthService {
 
         refreshTokenRepository.save(refreshTokenEntity);
 
-        UserResponse userResponse = UserResponse.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .build();
-
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .user(userResponse)
+                .user(mapToUserResponse(user))
                 .build();
     }
 
@@ -139,13 +140,7 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
-                .user(UserResponse.builder()
-                        .id(user.getId())
-                        .firstName(user.getFirstName())
-                        .lastName(user.getLastName())
-                        .phone(user.getPhone())
-                        .email(user.getEmail())
-                        .build())
+                .user(mapToUserResponse(user))
                 .build();
     }
 
@@ -169,11 +164,24 @@ public class AuthServiceImpl implements AuthService {
                 .getAuthentication()
                 .getPrincipal();
 
+        return mapToUserResponse(user);
+    }
+
+    private UserResponse mapToUserResponse(UserEntity user) {
+        Set<String> roleNames = user.getRoles() != null
+                ? user.getRoles().stream()
+                        .map(role -> role.getName().name())
+                        .collect(Collectors.toSet())
+                : Collections.emptySet();
+
         return UserResponse.builder()
                 .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
+                .phone(user.getPhone())
+                .emailVerified(user.getEmailVerified())
+                .roles(roleNames)
                 .build();
     }
 }

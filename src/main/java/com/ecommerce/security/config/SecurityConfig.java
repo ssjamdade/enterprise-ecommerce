@@ -50,7 +50,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/v1/products/my-products").authenticated()
                         .requestMatchers("/api/v1/seller/**").authenticated()
-                        .requestMatchers("/api/v1/admin/kyc/**").authenticated()
+                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/search").permitAll()
