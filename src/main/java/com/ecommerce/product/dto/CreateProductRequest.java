@@ -29,8 +29,7 @@ public class CreateProductRequest {
     @PositiveOrZero
     private Integer quantity;
 
-    @NotNull
-    private Boolean active;
+    private Boolean active = true;
 
     @NotNull
     private Long categoryId;

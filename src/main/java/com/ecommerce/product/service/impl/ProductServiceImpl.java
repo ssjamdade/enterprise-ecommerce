@@ -57,6 +57,9 @@ public class ProductServiceImpl implements ProductService {
         UserEntity currentUser = securityUtils.getCurrentUser();
 
         ProductEntity product = productMapper.toEntity(request);
+        if (product.getActive() == null) {
+            product.setActive(true);
+        }
         product.setCategory(category);
         product.setSeller(currentUser);
 

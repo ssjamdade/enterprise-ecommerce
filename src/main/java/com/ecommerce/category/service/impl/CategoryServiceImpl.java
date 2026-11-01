@@ -29,6 +29,9 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         CategoryEntity category = categoryMapper.toEntity(request);
+        if (category.getActive() == null) {
+            category.setActive(true);
+        }
 
         categoryRepository.save(category);
 
@@ -47,6 +50,9 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         categoryMapper.updateEntity(request, category);
+        if (category.getActive() == null) {
+            category.setActive(true);
+        }
 
         categoryRepository.save(category);
 
